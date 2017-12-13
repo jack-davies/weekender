@@ -6,26 +6,30 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       text: '',
-      currencies: {USD: '$', JPY: '¥', AUD: '$'},
+      currencies: {
+        USD: {symbol: '$', budgets: [100, 200, 500, 1000, 2000, 5000, null]}, 
+        JPY: {symbol: '¥', budgets: [10000, 20000, 50000, 100000, 200000, 500000, null]}, 
+        THB: {symbol: '฿', budgets: [2000, 5000, 10000, 20000, 50000, 100000, null]},
+        AUD: {symbol: '$', budgets: [100, 200, 500, 1000, 2000, 5000, null]}
+      },
       selectedCurrency: 'AUD',
-      budgets: [100, 200, 500, 1000, 2000, 5000, null],
       selectedBudget: null,
-      minBudget: 10,
+      minBudget: 0,
       maxBudget: 5000
     };
   }
 
   budgetString(value) {
-    return(value == null ? 'no budget' : this.state.currencies[this.state.selectedCurrency][0] + value)
+    return(value == null ? 'no budget' : this.state.currencies[this.state.selectedCurrency].symbol + value)
   }
 
   render() {
     let currencyOptions = []
     for (var key in this.state.currencies) {
-      currencyOptions.push(<Picker.Item key={key} label={this.state.currencies[key] + ' ' + key} value={key} />)
+      currencyOptions.push(<Picker.Item key={key} label={this.state.currencies[key].symbol + ' ' + key} value={key} />)
     }
 
-    let budgetsButtons = this.state.budgets.map(
+    let budgetsButtons = this.state.currencies[this.state.selectedCurrency].budgets.map(
       (option, i) => <View key={i} style={styles.button}><Button key={i} onPress={() => this.setState({selectedBudget: option})} title={this.budgetString(option)} /></View>
     )
 
@@ -34,7 +38,14 @@ export default class App extends React.Component {
         <Text style={styles.title}>weekender</Text>
         <View style={styles.elementH}>
           <Text>Currency: </Text>
-          <Picker style={styles.picker} selectedValue={this.state.selectedCurrency} onValueChange={(itemValue) => this.setState({selectedCurrency: itemValue})}>
+          <Picker style={styles.picker} selectedValue={this.state.selectedCurrency} 
+            onValueChange={
+              (itemValue) => {
+                this.setState({selectedCurrency: itemValue});
+                let newBudgets = this.state.currencies[itemValue].budgets;
+                this.setState({maxBudget: newBudgets[newBudgets.length-1]})
+              }
+          }>
             {currencyOptions}
         </Picker>
         </View>
@@ -43,7 +54,7 @@ export default class App extends React.Component {
             {budgetsButtons}
           </View>
           <View style={styles.elementH}>
-            <Text>{this.state.currencies[this.state.selectedCurrency][0] + this.state.minBudget + ' ' + this.state.selectedCurrency}</Text>
+            <Text>{this.budgetString(this.state.minBudget)}</Text>
             <Slider
               style={styles.slider}
               step={1}
@@ -52,7 +63,7 @@ export default class App extends React.Component {
               maximumValue={this.state.maxBudget}
               onSlidingComplete={(value) => this.setState({selectedBudget: value})}
             />
-            <Text>{this.state.currencies[this.state.selectedCurrency][0] + this.state.maxBudget + ' ' + this.state.selectedCurrency}</Text>
+            <Text>{this.budgetString(this.state.maxBudget)}</Text>
           </View>
         </View>
         
